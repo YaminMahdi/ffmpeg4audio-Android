@@ -33,12 +33,12 @@ build_ffmpeg() {
   
   # Use correct NM and skip checks
   export NM="$TOOLCHAIN/bin/llvm-nm.exe"
-  export ac_cv_prog_NM="$TOOLCHAIN/bin/llvm-nm.exe"
+  export ac_cv_prog_NM="$NM"
   export ac_cv_prog_nm_works=yes
   export cross_compiling=yes
   
-  export CFLAGS="-std=c11 -O2 -fPIC"
-  export CXXFLAGS="-std=c++11" 
+  export CFLAGS="-std=c11 -O2 -fPIC -march=$CPU -DANDROID"
+  export CXXFLAGS="-std=c++11 -fPIC"
   export LDFLAGS="-pie"
 
   # Build configure command dynamically to handle empty NEON
@@ -74,16 +74,20 @@ build_ffmpeg() {
     --enable-optimizations \
     --disable-everything \
     --enable-decoder=mp3,aac,flac,ogg,vorbis,opus,ac3,eac3,wmav1,wmav2,alac,pcm_s16le,pcm_s24le,pcm_s32le,pcm_f32le,pcm_mulaw,pcm_alaw \
-    --enable-encoder=pcm_s16le,pcm_s24le,pcm_f32le \
-    --enable-demuxer=mp3,aac,flac,ogg,wav,mp4,mov,matroska,avi,m4a,flv \
-    --enable-muxer=wav \
+    --enable-encoder=libmp3lame,pcm_s16le,pcm_f32le \
+    --enable-demuxer=mp3,aac,flac,ogg,wav,m4a \
+    --enable-muxer=mp3,wav \
     --enable-parser=mpegaudio,aac,flac,vorbis,opus \
     --enable-protocol=file,pipe \
     --enable-gpl \
     --enable-version3 \
     --enable-pthreads"
-  
-  # Only add NEON if it's not empty
+
+  # Disable x86 assembly to fix PIC errors
+  if [ "$ARCH" = "x86" ] || [ "$ARCH" = "x86_64" ]; then
+    CONFIGURE_CMD="$CONFIGURE_CMD --disable-x86asm --disable-inline-asm"
+  fi
+
   if [ -n "$NEON" ]; then
     CONFIGURE_CMD="$CONFIGURE_CMD $NEON"
   fi
@@ -93,10 +97,10 @@ build_ffmpeg() {
 
   make clean
   make -j$(nproc)
-  
+
   # FIX: Install with explicit strip command
   make install STRIP="$STRIP"
-  
+
   echo "Built $ARCH successfully"
 }
 
@@ -106,6 +110,6 @@ build_ffmpeg arm armv7a-linux-androideabi armv7-a "--enable-neon"
 
 # x86 architectures (NO NEON - it's ARM-only)
 build_ffmpeg x86 i686-linux-android i686 ""
-build_ffmpeg x86_64 x86_64-linux-android x86_64 ""
+build_ffmpeg x86_64 x86_64-linux-android x86-64 ""
 
 echo "Build completed!"
