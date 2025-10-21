@@ -2,7 +2,7 @@
 
 set -e
 
-export NDK="/c/Users/Yamin/AppData/Local/Android/Sdk/ndk/27.0.12077973"
+export NDK="/c/Users/Yamin/AppData/Local/Android/Sdk/ndk/27.0.12077973"  # To Support 16 KB page sizes
 export API=21
 export TOOLCHAIN=$NDK/toolchains/llvm/prebuilt/windows-x86_64
 
@@ -31,10 +31,10 @@ build_ffmpeg() {
   export CC=$TOOLCHAIN/bin/$TARGET$API-clang
   export CXX=$TOOLCHAIN/bin/$TARGET$API-clang++
   export AR=$TOOLCHAIN/bin/llvm-ar
-  
+
   # Use llvm-strip instead of architecture-specific strip
   export STRIP="$TOOLCHAIN/bin/llvm-strip.exe"
-  
+
   # Use correct NM and skip checks
   export NM="$TOOLCHAIN/bin/llvm-nm.exe"
 
@@ -46,12 +46,14 @@ build_ffmpeg() {
   export LAME_CFLAGS="-I$LAME_PREFIX/include"
   export LAME_LIBS="-L$LAME_PREFIX/lib -lmp3lame"
 
-  # Set CFLAGS and LDFLAGS with LAME paths
-  export CFLAGS="-std=c11 -O2 -fPIC -march=$CPU -DANDROID -I$LAME_PREFIX/include"
-  export CXXFLAGS="-std=c++11 -fPIC"
-  export LDFLAGS="-pie -L$LAME_PREFIX/lib"
+  # Set CFLAGS and LDFLAGS with LAME paths with 16 KB page sizes
+  echo "Setting CFLAGS and LDFLAGS with LAME paths with 16 KB page sizes..."
+  export CFLAGS="-std=c11 -O2 -fPIC -march=$CPU -DANDROID -I$LAME_PREFIX/include -Wl,-z,max-page-size=16384"
+  export CXXFLAGS="-std=c++11 -fPIC -Wl,-z,max-page-size=16384"
+  export LDFLAGS="-pie -L$LAME_PREFIX/lib -Wl,-z,max-page-size=16384"
 
   # Build configure command dynamically to handle empty NEON
+  echo "Building configure command..."
   CONFIGURE_CMD="
   ./configure \
     --prefix=$PREFIX \
@@ -115,6 +117,7 @@ build_ffmpeg() {
   make -j$(nproc)
 
   # FIX: Install with explicit strip command
+  echo "Installing FFmpeg with explicit strip command..."
   make install STRIP="$STRIP"
 
   echo "Built $ARCH successfully"

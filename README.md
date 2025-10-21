@@ -1,6 +1,6 @@
 # FFmpeg Android Build Setup for Windows (MSYS2)
 
-This guide walks you through building FFmpeg (n7.1.2) for Android on Windows using MSYS2.
+This guide walks you through building FFmpeg (n7.1.2) with NDK 27 withSupport 16 KB page sizes for Android on Windows using MSYS2.
 
 ## Prerequisites
 

@@ -2,7 +2,7 @@
 
 set -e
 
-export NDK="/c/Users/Yamin/AppData/Local/Android/Sdk/ndk/27.0.12077973"
+export NDK="/c/Users/Yamin/AppData/Local/Android/Sdk/ndk/27.0.12077973"  # To Support 16 KB page sizes
 export API=21
 export TOOLCHAIN="$NDK/toolchains/llvm/prebuilt/windows-x86_64"
 
@@ -11,15 +11,19 @@ LAME_VERSION="3.100"
 LAME_SOURCE="lame-${LAME_VERSION}"
 LAME_URL="https://downloads.sourceforge.net/project/lame/lame/${LAME_VERSION}/${LAME_SOURCE}.tar.gz"
 
+echo "Setting up LAME repository..."
+rm -rf LAME_SOURCE 2>/dev/null || true
 LAME_OUTPUT_DIR=$(pwd)/android-lame
 mkdir -p "$LAME_OUTPUT_DIR"
 
 echo "Setting up FFmpeg repository..."
-git remote add ffmpeg https://git.ffmpeg.org/ffmpeg.git | true
-git fetch ffmpeg "$FFMPEG_VERSION"
-git checkout -b "${FFMPEG_VERSION}-branch" FETCH_HEAD --force
 git config user.email "yamin_kahn@asia.com"
 git config user.name "Mahdi"
+git add . --force
+git commit -m "change user name" 2>/dev/null || true
+git remote add ffmpeg https://git.ffmpeg.org/ffmpeg.gitt 2>/dev/null || true
+git fetch ffmpeg "$FFMPEG_VERSION" --depth 1
+git checkout -B "${FFMPEG_VERSION}-branch" FETCH_HEAD --force
 git merge master --allow-unrelated-histories -X theirs --no-edit
 git add . --force
 git commit -m "merge master into ffmpeg $FFMPEG_VERSION, keeping master files" --allow-empty
@@ -38,23 +42,25 @@ build_lame() {
     TARGET=$2
     HOST=$3
     SYSROOT="$TOOLCHAIN/sysroot"
-    
+
     echo "============================"
     echo " Building LAME for $ARCH "
     echo "============================"
-    
+
     PREFIX="$LAME_OUTPUT_DIR/$ARCH"
     mkdir -p "$PREFIX"
-    
+
     export CC="$TOOLCHAIN/bin/${TARGET}${API}-clang"
     export CXX="$TOOLCHAIN/bin/${TARGET}${API}-clang++"
     export AR="$TOOLCHAIN/bin/llvm-ar"
     export RANLIB="$TOOLCHAIN/bin/llvm-ranlib"
     export STRIP="$TOOLCHAIN/bin/llvm-strip"
-    
-    export CFLAGS="-std=c99 -O2 -fPIC -DNDEBUG"
-    export LDFLAGS="-pie"
-    
+
+    # Set CFLAGS and LDFLAGS with LAME paths with 16 KB page sizes
+    echo "Setting CFLAGS and LDFLAGS with LAME paths with 16 KB page sizes..."
+    export CFLAGS="-std=c99 -O2 -fPIC -DNDEBUG -Wl,-z,max-page-size=16384"
+    export LDFLAGS="-pie -Wl,-z,max-page-size=16384"
+
     # Clean previous build only if Makefile exists
     if [ -f "Makefile" ]; then
         make clean || true
@@ -76,10 +82,11 @@ build_lame() {
         CFLAGS="$CFLAGS" \
         LDFLAGS="$LDFLAGS" \
         --with-sysroot="$SYSROOT"
-    
+
     make -j$(nproc)
+    echo "Installing LAME..."
     make install
-    
+
     echo "Built LAME for $ARCH"
 }
 
