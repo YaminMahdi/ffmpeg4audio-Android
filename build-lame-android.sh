@@ -2,16 +2,27 @@
 
 set -e
 
-export NDK="/c/Users/User/AppData/Local/Android/Sdk/ndk/27.0.12077973"
+export NDK="/c/Users/Yamin/AppData/Local/Android/Sdk/ndk/27.0.12077973"
 export API=21
 export TOOLCHAIN="$NDK/toolchains/llvm/prebuilt/windows-x86_64"
 
+FFMPEG_VERSION="n7.1.2"
 LAME_VERSION="3.100"
 LAME_SOURCE="lame-${LAME_VERSION}"
 LAME_URL="https://downloads.sourceforge.net/project/lame/lame/${LAME_VERSION}/${LAME_SOURCE}.tar.gz"
 
 LAME_OUTPUT_DIR=$(pwd)/android-lame
 mkdir -p "$LAME_OUTPUT_DIR"
+
+echo "Setting up FFmpeg repository..."
+git remote add ffmpeg https://git.ffmpeg.org/ffmpeg.git | true
+git fetch ffmpeg "$FFMPEG_VERSION"
+git checkout -b "${FFMPEG_VERSION}-branch" FETCH_HEAD --force
+git config user.email "yamin_kahn@asia.com"
+git config user.name "Mahdi"
+git merge master --allow-unrelated-histories -X theirs --no-edit
+git add . --force
+git commit -m "merge master into ffmpeg $FFMPEG_VERSION, keeping master files" --allow-empty
 
 # Download LAME if not exists
 if [ ! -d "$LAME_SOURCE" ]; then
@@ -44,9 +55,11 @@ build_lame() {
     export CFLAGS="-std=c99 -O2 -fPIC -DNDEBUG"
     export LDFLAGS="-pie"
     
-    # Clean previous build
-    make clean || true
-    
+    # Clean previous build only if Makefile exists
+    if [ -f "Makefile" ]; then
+        make clean || true
+    fi
+
     ./configure \
         --host="$HOST" \
         --prefix="$PREFIX" \

@@ -6,13 +6,14 @@ export NDK="/c/Users/Yamin/AppData/Local/Android/Sdk/ndk/27.0.12077973"
 export API=21
 export TOOLCHAIN=$NDK/toolchains/llvm/prebuilt/windows-x86_64
 
-
-# FFmpeg version
-FFMPEG_VERSION="n7.1.2"
-
 LAME_OUTPUT_DIR=$(pwd)/android-lame
 FFMPEG_OUTPUT_DIR=$(pwd)/android
+
+# Set full permissions on ALL directories
+echo "Setting full permissions on all directories..."
+mkdir -p "$LAME_OUTPUT_DIR"
 mkdir -p "$FFMPEG_OUTPUT_DIR"
+chmod -R 777 .
 
 build_ffmpeg() {
   ARCH=$1
@@ -40,7 +41,12 @@ build_ffmpeg() {
   export ac_cv_prog_NM="$NM"
   export ac_cv_prog_nm_works=yes
   export cross_compiling=yes
-  
+
+  # Export LAME paths for pkg-config
+  export LAME_CFLAGS="-I$LAME_PREFIX/include"
+  export LAME_LIBS="-L$LAME_PREFIX/lib -lmp3lame"
+
+  # Set CFLAGS and LDFLAGS with LAME paths
   export CFLAGS="-std=c11 -O2 -fPIC -march=$CPU -DANDROID -I$LAME_PREFIX/include"
   export CXXFLAGS="-std=c++11 -fPIC"
   export LDFLAGS="-pie -L$LAME_PREFIX/lib"
@@ -61,6 +67,7 @@ build_ffmpeg() {
     --sysroot=$TOOLCHAIN/sysroot \
     --extra-cflags=\"$CFLAGS\" \
     --extra-ldflags=\"$LDFLAGS\" \
+    --stdc=c11 \
     --enable-shared \
     --disable-static \
     --enable-pic \
@@ -101,8 +108,10 @@ build_ffmpeg() {
   echo "Configuring FFmpeg with LAME support..."
   eval $CONFIGURE_CMD
 
-  make clean || true
-  rm -f ffbuild/config.mak config.h
+  # Clean previous build only if Makefile exists
+  if [ -f "Makefile" ]; then
+      make clean || true
+  fi
   make -j$(nproc)
 
   # FIX: Install with explicit strip command

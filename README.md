@@ -1,6 +1,6 @@
 # FFmpeg Android Build Setup for Windows (MSYS2)
 
-This guide walks you through building FFmpeg for Android on Windows using MSYS2.
+This guide walks you through building FFmpeg (n7.1.2) for Android on Windows using MSYS2.
 
 ## Prerequisites
 
@@ -10,13 +10,8 @@ b. Open MSYS2 MINGW64
 
 ### 2. Setup FFmpeg Source
 ```bash
-git clone https://github.com/YaminMahdi/ffmpeg4audio2wav-Android.git ffmpeg
+git clone https://github.com/YaminMahdi/ffmpeg4audio-Android.git ffmpeg
 cd ffmpeg
-git remote add ffmpeg https://git.ffmpeg.org/ffmpeg.git
-git fetch ffmpeg n7.1.2
-git checkout -b n7.1.2-branch FETCH_HEAD
-git merge master --allow-unrelated-histories
-git checkout --theirs .
 ```
 
 ### 3. Install Required Packages
@@ -139,8 +134,8 @@ object FFmpegLibs {
 Once integrated, you can use FFmpeg in your Android app:
 
 ```kotlin
-val inputPath = File(x).path
-val outputPath = File(y).path
+val inputPath = File("x").path
+val outputPath = File("y").path
 val cmd = arrayOf(
     "ffmpeg",
     "-i", inputPath,
