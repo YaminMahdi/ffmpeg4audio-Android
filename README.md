@@ -5,12 +5,18 @@ This guide walks you through building FFmpeg for Android on Windows using MSYS2.
 ## Prerequisites
 
 ### 1. Install MSYS2
-Download and install MSYS2 from [https://www.msys2.org/](https://www.msys2.org/)
+a. Download and install MSYS2 from [https://www.msys2.org/](https://www.msys2.org/)
+b. Open MSYS2 MINGW64
 
 ### 2. Setup FFmpeg Source
 ```bash
-git clone https://git.ffmpeg.org/ffmpeg.git ./
-git checkout n7.1.2
+git clone https://github.com/YaminMahdi/ffmpeg4audio2wav-Android.git ffmpeg
+cd ffmpeg
+git remote add ffmpeg https://git.ffmpeg.org/ffmpeg.git
+git fetch ffmpeg n7.1.2
+git checkout -b n7.1.2-branch FETCH_HEAD
+git merge master --allow-unrelated-histories
+git checkout --theirs .
 ```
 
 ### 3. Install Required Packages
