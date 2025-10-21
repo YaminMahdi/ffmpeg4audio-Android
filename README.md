@@ -26,23 +26,24 @@ pacman -S mingw-w64-x86_64-gcc
 pacman -S --needed base-devel mingw-w64-x86_64-toolchain
 ```
 
-## Building FFmpeg
-Here's your updated FFmpeg build instruction with the correct `NDK` path and username:
+## Building FFmpeg with LAME support
 
 ### 1. Set the NDK Path
-Before running the build, edit `build-ffmpeg-android.sh` and change NDK path. Replace `Yamin` with your actual Windows username if different:
+Before running the build, edit `build-lame-android.sh` and `build-ffmpeg-android.sh` and change NDK path. Replace `Yamin` with your actual Windows username if different:
 
 ```bash
 export NDK="/c/Users/Yamin/AppData/Local/Android/Sdk/ndk/27.0.12077973"
 ```
 
-### 2. Make Build Script Executable
+### 2. Make Build Scripts Executable
 ```bash
+chmod +x build-lame-android.sh
 chmod +x build-ffmpeg-android.sh
 ```
 
-### 3. Run the Build
+### 3. Run the Builds
 ```bash
+./build-lame-android.sh
 ./build-ffmpeg-android.sh
 ```
 

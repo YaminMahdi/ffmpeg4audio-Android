@@ -6,11 +6,13 @@ export NDK="/c/Users/Yamin/AppData/Local/Android/Sdk/ndk/27.0.12077973"
 export API=21
 export TOOLCHAIN=$NDK/toolchains/llvm/prebuilt/windows-x86_64
 
-OUTPUT_DIR=$(pwd)/android
-mkdir -p "$OUTPUT_DIR"
 
 # FFmpeg version
 FFMPEG_VERSION="n7.1.2"
+
+LAME_OUTPUT_DIR=$(pwd)/android-lame
+FFMPEG_OUTPUT_DIR=$(pwd)/android
+mkdir -p "$FFMPEG_OUTPUT_DIR"
 
 build_ffmpeg() {
   ARCH=$1
@@ -22,7 +24,8 @@ build_ffmpeg() {
   echo " Building FFmpeg for $ARCH "
   echo "============================"
 
-  PREFIX="$OUTPUT_DIR/$ARCH"
+  PREFIX="$FFMPEG_OUTPUT_DIR/$ARCH"
+  LAME_PREFIX="$LAME_OUTPUT_DIR/$ARCH"
 
   export CC=$TOOLCHAIN/bin/$TARGET$API-clang
   export CXX=$TOOLCHAIN/bin/$TARGET$API-clang++
@@ -33,13 +36,14 @@ build_ffmpeg() {
   
   # Use correct NM and skip checks
   export NM="$TOOLCHAIN/bin/llvm-nm.exe"
+
   export ac_cv_prog_NM="$NM"
   export ac_cv_prog_nm_works=yes
   export cross_compiling=yes
   
-  export CFLAGS="-std=c11 -O2 -fPIC -march=$CPU -DANDROID"
+  export CFLAGS="-std=c11 -O2 -fPIC -march=$CPU -DANDROID -I$LAME_PREFIX/include"
   export CXXFLAGS="-std=c++11 -fPIC"
-  export LDFLAGS="-pie"
+  export LDFLAGS="-pie -L$LAME_PREFIX/lib"
 
   # Build configure command dynamically to handle empty NEON
   CONFIGURE_CMD="
@@ -75,6 +79,7 @@ build_ffmpeg() {
     --disable-everything \
     --enable-decoder=mp3,aac,flac,ogg,vorbis,opus,ac3,eac3,wmav1,wmav2,alac,pcm_s16le,pcm_s24le,pcm_s32le,pcm_f32le,pcm_mulaw,pcm_alaw \
     --enable-encoder=libmp3lame,pcm_s16le,pcm_f32le \
+    --enable-libmp3lame \
     --enable-demuxer=mp3,aac,flac,ogg,wav,m4a \
     --enable-muxer=mp3,wav \
     --enable-parser=mpegaudio,aac,flac,vorbis,opus \
@@ -93,9 +98,11 @@ build_ffmpeg() {
   fi
 
   # Execute the configure command
+  echo "Configuring FFmpeg with LAME support..."
   eval $CONFIGURE_CMD
 
-  make clean
+  make clean || true
+  rm -f ffbuild/config.mak config.h
   make -j$(nproc)
 
   # FIX: Install with explicit strip command
