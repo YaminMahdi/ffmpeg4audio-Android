@@ -12,7 +12,7 @@ LAME_SOURCE="lame-${LAME_VERSION}"
 LAME_URL="https://downloads.sourceforge.net/project/lame/lame/${LAME_VERSION}/${LAME_SOURCE}.tar.gz"
 
 echo "Setting up LAME repository..."
-rm -rf LAME_SOURCE 2>/dev/null || true
+rm -rf "$LAME_SOURCE" "$LAME_SOURCE.tar.gz" 2>/dev/null || true
 LAME_OUTPUT_DIR=$(pwd)/android-lame
 mkdir -p "$LAME_OUTPUT_DIR"
 
@@ -61,10 +61,8 @@ build_lame() {
     export CFLAGS="-std=c99 -O2 -fPIC -DNDEBUG -Wl,-z,max-page-size=16384"
     export LDFLAGS="-pie -Wl,-z,max-page-size=16384"
 
-    # Clean previous build only if Makefile exists
-    if [ -f "Makefile" ]; then
-        make clean || true
-    fi
+    # Clean safely if Makefile exists
+    [ -f "Makefile" ] && make clean || true
 
     ./configure \
         --host="$HOST" \
@@ -72,8 +70,8 @@ build_lame() {
         --enable-static \
         --disable-shared \
         --disable-frontend \
-        --disable-decoder \
         --enable-nasm \
+        --with-pic \
         CC="$CC" \
         CXX="$CXX" \
         AR="$AR" \

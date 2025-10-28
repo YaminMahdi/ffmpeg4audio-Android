@@ -48,9 +48,9 @@ build_ffmpeg() {
 
   # Set CFLAGS and LDFLAGS with LAME paths with 16 KB page sizes
   echo "Setting CFLAGS and LDFLAGS with LAME paths with 16 KB page sizes..."
-  export CFLAGS="-std=c11 -O2 -fPIC -march=$CPU -DANDROID -I$LAME_PREFIX/include -Wl,-z,max-page-size=16384"
+  export CFLAGS="-std=c11 -O2 -fPIC -march=$CPU -DANDROID $LAME_CFLAGS -Wl,-z,max-page-size=16384"
   export CXXFLAGS="-std=c++11 -fPIC -Wl,-z,max-page-size=16384"
-  export LDFLAGS="-pie -L$LAME_PREFIX/lib -Wl,-z,max-page-size=16384"
+  export LDFLAGS="-L$LAME_PREFIX/lib -Wl,-z,max-page-size=16384"
 
   # Build configure command dynamically to handle empty NEON
   echo "Building configure command..."
@@ -86,13 +86,14 @@ build_ffmpeg() {
     --disable-swscale \
     --enable-optimizations \
     --disable-everything \
-    --enable-decoder=mp3,aac,flac,ogg,vorbis,opus,ac3,eac3,wmav1,wmav2,alac,pcm_s16le,pcm_s24le,pcm_s32le,pcm_f32le,pcm_mulaw,pcm_alaw \
+    --enable-decoder=mp3,aac,flac,ogg,vorbis,opus,ac3,eac3,wmav1,wmav2,alac,pcm_s16le,pcm_s24le,pcm_s32le,pcm_f32le,pcm_mulaw,pcm_alaw,h264,hevc,mpeg4,vp8,vp9 \
     --enable-encoder=libmp3lame,pcm_s16le,pcm_f32le \
     --enable-libmp3lame \
-    --enable-demuxer=mp3,aac,flac,ogg,wav,m4a \
+    --enable-demuxer=mp3,aac,flac,ogg,wav,m4a,mov,matroska,avi,asf \
     --enable-muxer=mp3,wav \
-    --enable-parser=mpegaudio,aac,flac,vorbis,opus \
+    --enable-parser=mpegaudio,aac,flac,vorbis,opus,h264,hevc,mpeg4video \
     --enable-protocol=file,pipe \
+    --extra-libs="-lmp3lame"
     --enable-gpl \
     --enable-version3 \
     --enable-pthreads"
